@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
+import datetime
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -87,8 +88,17 @@ class Scraper:
         [nd_urls.append(item) for item in urls if item not in nd_urls]
         return nd_urls
     
-    def get_hotel_info(self) -> list:
-        pass
+    def get_hotel_info(self, url) -> list:
+        '''
+        Returns a hotel information:
+        - Hotel id and link to the hotel page on TripAdvisor *  
+        - Name, phone number, address, website, and other contact information.
+        - Ratings and quality rankings. *
+        - Indicative price. *
+        - Timestamp of when the data was scraped. *
+
+        '''
+        hotel_url = 'https://www.tripadvisor.com{url}'.format(url)
 
 
 
