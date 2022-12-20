@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import json
 import re
 import datetime
+import base64
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -88,7 +89,13 @@ class Scraper:
         [nd_urls.append(item) for item in urls if item not in nd_urls]
         return nd_urls
     
-    def get_hotel_info(self, url) -> list:
+    def mean(self, arr):
+            '''
+            Helper function to calculate average
+            '''
+            return sum(arr)/len(arr)
+    
+    def get_hotel_info(self, url) -> dict:
         '''
         Returns a hotel information:
         - Hotel id and link to the hotel page on TripAdvisor *  
@@ -98,10 +105,87 @@ class Scraper:
         - Timestamp of when the data was scraped. *
 
         '''
-        hotel_url = 'https://www.tripadvisor.com{url}'.format(url)
+        info = dict()
+        hotel_url = 'https://www.tripadvisor.com{url}'.format(url=url)
+        content = self.get_content(hotel_url, self.headers)
+        timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
+
+        # Name
+        name = ''
+        try:
+            name = content.find_all('h1', {'class':'QdLfr b d Pn'})[0].text
+        except:
+            pass
+        
+        id = url.split('-')[2].split('d')[1]
+        address = content.find_all('span', {'class':'fHvkI PTrfg'})[0].text
+
+        # Hotel's Telephone
+        telephone = ''
+        try:
+            telephone = content.find_all('span', {'class':'zNXea NXOxh NjUDn'})[0].text
+        except:
+            pass
+
+        # Hotel's Adress
+        hotel_website = ''
+        try:
+            hotel_main_url = str(content.find_all('div', {'class':'eeVey S4 H3 f u LGJIs'})[0].find_all('a')[0]['data-encoded-url'])
+            if hotel_main_url:
+                hotel_website = "https://www.tripadvisor.com" + "/Commerce?p" +str(base64.b64decode(hotel_main_url)).split('/Commerce?p')[1]
+        except:
+            pass
+        
+        # Price
+        price = 'undisclosed'
+        prices = []
+        try:
+            price = content.find_all('div', {'class':'premium_offers_area offers'})[0] # Price of 1 night for an adult.
+            for p in price.find_all('div'):
+                try:
+                    prices.append(int(p['data-pernight']))
+                except:
+                    pass
+        except:
+            pass
+
+        average_price = 0
+        if len(prices) > 0:
+            average_price = self.mean(prices)
+        
+        rating = content.find_all('span', {'class':'uwJeR P'})[0].text
+        quality_rankings = content.find_all('div', {'class':'WdWxQ'})
+        qr_rankings = []
+        for qr in quality_rankings:
+            q_ranking = []
+            for c in qr.find_all('span'):
+                q_ranking.append(c.text)
+            qr_rankings.append(q_ranking)
+        rankings = dict()
+        for i in qr_rankings:
+            rankings[str(i[0])] = i[1]
+        
+        info['hotel_name'] = name
+        info['hotel_id'] = id
+        info['url_trip_advisor'] = hotel_url
+        info['hotel_website'] = hotel_website
+        info['address'] = address
+        info['telephone'] = telephone
+        info['average_price'] = average_price
+        info['overall_rating'] = rating
+        info['quality_rankings'] = rankings
+        info['timestamp'] = timestamp
+
+        return info
+
+    
+    def get_all_hotel_info_by_city(self):
+        hotels_urls = self.get_city_hotels_urls()
+        for el in hotels_urls:
+            print(self.get_hotel_info(el))
 
 
 
-i1 = Scraper('Bucaramanga')
+i1 = Scraper('Medellin')
 
-print(i1.get_city_hotels_urls())
+print(i1.get_all_hotel_info_by_city())

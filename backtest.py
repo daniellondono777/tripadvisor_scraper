@@ -65,6 +65,7 @@ def get_hotel_info(url):
     content = get_content(hotel_url)
     timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
     name = content.find_all('h1', {'class':'QdLfr b d Pn'})[0].text
+    id = url.split('-')[2].split('d')[1]
     address = content.find_all('span', {'class':'fHvkI PTrfg'})[0].text
 
     # Hotel's Telephone
@@ -95,6 +96,7 @@ def get_hotel_info(url):
                 pass
     except:
         pass
+
     average_price = 0
     if len(prices) > 0:
         average_price = mean(prices)
@@ -112,7 +114,7 @@ def get_hotel_info(url):
         rankings[str(i[0])] = i[1]
     
     info['hotel_name'] = name
-    # info[''hotel_id] = id
+    info['hotel_id'] = id
     info['url_trip_advisor'] = hotel_url
     info['hotel_website'] = hotel_website
     info['address'] = address
@@ -124,8 +126,4 @@ def get_hotel_info(url):
 
     return info
     
-
-
-for i in urls:
-    print(get_hotel_info(i))
-    print('********')
+print(get_hotel_info('/Hotel_Review-g294074-d7107178-Reviews-Four_Points_by_Sheraton_Bogota-Bogota.html'))
