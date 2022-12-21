@@ -1,7 +1,7 @@
 <h1 align="left">Trip Advisor Scraper</h1>
 
   <p align="left">
-    This system scraps relevant information from tripadvisor.com and converts it into a string with CSV format. It uses Flask in order to provide API functionality.
+    This system scraps relevant information of Colombian hotels (such as price, ratings, quality rankings, etc) from tripadvisor.com and converts it into a well structured string on a CSV format. It uses Flask in order to provide API functionality.
   </p>
 </div>
 
