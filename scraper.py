@@ -8,15 +8,19 @@ import json
 import re
 import datetime
 import base64
+import pandas as pd
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 class Scraper:
+    '''
+    Object to scrape TripAdvisor's website and obtain relevant information of hotels in Colombia. 
+    '''
     def __init__(self, city: str) -> None:
         '''
         Constructor method
         '''
-        self.city = city
+        self.city = city[0].upper() + city[1::].lower()
         self.headers = (
                         {   
                         'User-Agent':
@@ -99,7 +103,7 @@ class Scraper:
         '''
         Returns a hotel information:
         - Hotel id and link to the hotel page on TripAdvisor *  
-        - Name, phone number, address, website, and other contact information.
+        - Name, phone number, address, website, and other contact information. *
         - Ratings and quality rankings. *
         - Indicative price. *
         - Timestamp of when the data was scraped. *
@@ -116,7 +120,7 @@ class Scraper:
             name = content.find_all('h1', {'class':'QdLfr b d Pn'})[0].text
         except:
             pass
-        
+
         id = url.split('-')[2].split('d')[1]
         address = content.find_all('span', {'class':'fHvkI PTrfg'})[0].text
 
@@ -179,13 +183,28 @@ class Scraper:
         return info
 
     
-    def get_all_hotel_info_by_city(self):
+    def get_all_hotel_info_by_city(self) -> pd.DataFrame:
+        '''
+        Returns in a DataFrame detailed information about Hotels in the specified city. 
+        '''
+        hotels_by_city = []
         hotels_urls = self.get_city_hotels_urls()
         for el in hotels_urls:
-            print(self.get_hotel_info(el))
-
-
-
-i1 = Scraper('Medellin')
-
-print(i1.get_all_hotel_info_by_city())
+            hotels_by_city.append(self.get_hotel_info(el))
+        df = pd.DataFrame.from_dict(hotels_by_city)
+        return df
+    
+    def detailed_info_csv(self) -> None:
+        '''
+        Exports the Dataframe with detailed information into a .csv file
+        '''
+        df = self.get_all_hotel_info_by_city()
+        df.to_csv('detailed_info_hotels_{c}.csv'.format(c = self.city.lower()))
+    
+    def str_detailed_info_csv(self) -> str:
+        '''
+        Returns detailed information in a string with a csv format
+        '''
+        df = self.get_all_hotel_info_by_city()
+        csv_df = df.to_csv()
+        return csv_df
